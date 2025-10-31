@@ -663,8 +663,70 @@ function ChatAssistant({ context }) {
   const [chatHistory, setChatHistory] = useState([]);
   const [error, setError] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
+  const [dbContext, setDbContext] = useState("");
+  const [loadingContext, setLoadingContext] = useState(true);
   const chatHistoryRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Fetch context from database
+  const fetchContextFromDB = async () => {
+    try {
+      setLoadingContext(true);
+      // Fetch media results (for analysis) - includes live transcript and youtube upload
+      const mediaResponse = await axios.get("/api/results?type=media");
+      // Fetch transcribe results (for analysis) - audio file uploads
+      const transcribeResponse = await axios.get("/api/results?type=transcribe");
+      // Fetch notes results (for processed) - PDF and text file processing
+      const notesResponse = await axios.get("/api/results?type=notes");
+      
+      const contextParts = [];
+      
+      // Extract analysis from media results (live transcript, youtube videos)
+      if (mediaResponse.data.success && mediaResponse.data.results) {
+        const mediaContexts = mediaResponse.data.results
+          .filter(result => result.content?.analysis)
+          .map(result => `[Media Analysis]\n${result.content.analysis}`)
+          .slice(0, 3); // Limit to most recent 3
+        if (mediaContexts.length > 0) {
+          contextParts.push(...mediaContexts);
+        }
+      }
+      
+      // Extract analysis from transcribe results (audio file uploads)
+      if (transcribeResponse.data.success && transcribeResponse.data.results) {
+        const transcribeContexts = transcribeResponse.data.results
+          .filter(result => result.content?.analysis)
+          .map(result => `[Audio Transcription Analysis]\n${result.content.analysis}`)
+          .slice(0, 3); // Limit to most recent 3
+        if (transcribeContexts.length > 0) {
+          contextParts.push(...transcribeContexts);
+        }
+      }
+      
+      // Extract processed from notes results (PDF/text processing)
+      if (notesResponse.data.success && notesResponse.data.results) {
+        const notesContexts = notesResponse.data.results
+          .filter(result => result.content?.processed)
+          .map(result => `[Processed Notes]\n${result.content.processed}`)
+          .slice(0, 3); // Limit to most recent 3
+        if (notesContexts.length > 0) {
+          contextParts.push(...notesContexts);
+        }
+      }
+      
+      const combinedContext = contextParts.join("\n\n---\n\n");
+      setDbContext(combinedContext);
+    } catch (err) {
+      console.error("Error fetching context from DB:", err);
+      setDbContext("");
+    } finally {
+      setLoadingContext(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchContextFromDB();
+  }, []);
 
   useEffect(() => {
     if (chatHistoryRef.current) {
@@ -692,9 +754,12 @@ function ChatAssistant({ context }) {
       // Simulate typing delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
+      // Combine prop context (from other tabs) and DB context
+      const combinedContext = [context, dbContext].filter(Boolean).join("\n\n---\n\n");
+
       const response = await axios.post("/api/chat", {
         message: userMessage,
-        context: context,
+        context: combinedContext || undefined,
       });
 
       setIsTyping(false);
@@ -740,16 +805,41 @@ function ChatAssistant({ context }) {
         </p>
       </div>
 
-      {context && (
+      {(context || dbContext) && (
         <div className="context-indicator modern-context">
           <div className="context-content">
             <span className="context-icon">
               <Icon name="check-circle" />
             </span>
-            <div>
+            <div style={{ flex: 1 }}>
               <strong>Context Active</strong>
-              <p>Using content from previous tab for better answers</p>
+              <p>
+                {loadingContext 
+                  ? "Loading context from database..." 
+                  : dbContext 
+                    ? "Using stored results from previous sessions for better answers" 
+                    : "Using content from previous tab for better answers"}
+              </p>
             </div>
+            {!loadingContext && (
+              <button
+                onClick={fetchContextFromDB}
+                className="refresh-context-btn"
+                title="Refresh context from database"
+                style={{
+                  background: "rgba(255, 255, 255, 0.5)",
+                  border: "none",
+                  borderRadius: "0.5rem",
+                  padding: "0.5rem",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Icon name="refresh-cw" size={16} />
+              </button>
+            )}
           </div>
         </div>
       )}
