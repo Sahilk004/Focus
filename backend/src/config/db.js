@@ -7,10 +7,10 @@ export const connectDB = async () => {
       useUnifiedTopology: true,
     });
     // eslint-disable-next-line no-console
-    console.log(MongoDB Connected: ${conn.connection.host});
+    console.log(`MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
     // eslint-disable-next-line no-console
-    console.error(DB Connection Error: ${error.message});
+    console.error(`DB Connection Error: ${error.message}`);
     process.exit(1);
   }
 };

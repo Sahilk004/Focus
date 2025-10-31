@@ -20,14 +20,15 @@ export const signup = async (req, res) => {
     const validation = schema.safeParse(req.body);
     if (!validation.success) {
       const errors = validation.error.errors
-        .map((e) => ${e.path[0]}: ${e.message})
+        .map((e) => `${e.path[0]}: ${e.message}`)
         .join(", ");
       return res.status(400).json({ error: errors });
     }
 
     const { username, password } = req.body;
     const existing = await User.findOne({ username });
-    if (existing) return res.status(400).json({ error: "Username already exists" });
+    if (existing)
+      return res.status(400).json({ error: "Username already exists" });
 
     const hashed = await bcrypt.hash(password, 10);
     const newUser = await User.create({ username, password: hashed });
@@ -51,8 +52,7 @@ export const signin = async (req, res) => {
     const token = generateToken(user._id);
     res.status(200).json({ message: "Signin successful", token });
   } catch (err) {
-    // eslint-disable-next-line no-console
-    console.error("Signup Error:", err);
+    console.error("Signin Error:", err);
     res.status(500).json({ error: "Internal server error" });
   }
 };
