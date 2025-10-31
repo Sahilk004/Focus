@@ -1,11 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
-
-
-
-// import ChatAssistant from "./components/ChatAssistant";
-// import StudySchedule from "./components/StudySchedule";
+import NotesProcessor from "./components/NotesProcessor";
+import MeetingAssistant from "./components/MeetingAssistant";
+import MeetingTranscriber from "./components/MeetingTranscriber";
+import ChatAssistant from "./components/ChatAssistant";
+import StudySchedule from "./components/StudySchedule";
 import Login from "./components/Login";
 
 function App() {
@@ -26,6 +26,15 @@ function App() {
       delete axios.defaults.headers.common["Authorization"];
     }
   }, [authed]);
+
+  // Persist active tab across reloads and restore on mount
+  useEffect(() => {
+    const savedTab = localStorage.getItem("ama_active_tab");
+    if (savedTab) setActiveTab(savedTab);
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("ama_active_tab", activeTab);
+  }, [activeTab]);
 
   const handleLoggedIn = useCallback(() => {
     setAuthed(true);
@@ -98,17 +107,21 @@ function App() {
           </nav>
 
           <main className="content">
-            {activeTab === "notes" && (
+            <div style={{ display: activeTab === "notes" ? "block" : "none" }}>
               <NotesProcessor setContext={setContext} />
-            )}
-            {activeTab === "liveRecording" && (
+            </div>
+            <div style={{ display: activeTab === "liveRecording" ? "block" : "none" }}>
               <MeetingAssistant setContext={setContext} />
-            )}
-            {activeTab === "meeting" && (
+            </div>
+            <div style={{ display: activeTab === "meeting" ? "block" : "none" }}>
               <MeetingTranscriber setContext={setContext} />
-            )}
-            {activeTab === "chat" && <ChatAssistant context={context} />}
-            {activeTab === "schedule" && <StudySchedule />}
+            </div>
+            <div style={{ display: activeTab === "chat" ? "block" : "none" }}>
+              <ChatAssistant context={context} />
+            </div>
+            <div style={{ display: activeTab === "schedule" ? "block" : "none" }}>
+              <StudySchedule />
+            </div>
           </main>
         </>
       )}
