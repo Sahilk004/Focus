@@ -4,13 +4,29 @@ dotenv.config();
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
+// export async function transcribeAudioStream(fileStream) {
+//   return await groq.audio.transcriptions.create({
+//     file: fileStream,
+//     model: "whisper-large-v3",
+//     response_format: "json",
+//   });
+// }
+
+//
 export async function transcribeAudioStream(fileStream) {
-  return await groq.audio.transcriptions.create({
-    file: fileStream,
-    model: "whisper-large-v3",
-    response_format: "json",
-  });
+  try {
+    return await groq.audio.transcriptions.create({
+      file: fileStream,
+      model: "whisper-large-v3",
+      response_format: "json",
+    });
+  } catch (e) {
+    console.error("Transcription API error:", e.message);
+    throw e;
+  }
 }
+
+//
 
 export async function generateStudyArtifacts(transcriptText) {
   const schemaHint = `Return strict JSON with keys: notes (array), flashcards (array of {question, answer}), quiz (array of {question, options (4), correctIndex}).`;
