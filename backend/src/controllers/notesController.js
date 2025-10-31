@@ -1,7 +1,27 @@
+// // import fs from "fs";
+// // import pdf from "pdf-parse";
+// //
+// import fs from "fs";
+// let pdf;
+// (async () => {
+//   const module = await import("pdf-parse");
+//   pdf = module.default || module;
+// })();
+// //
+// import { chatComplete } from "../utils/aiGenerator.js";
+// import Result from "../models/resultModel.js";
+
+
+//
 import fs from "fs";
-import pdf from "pdf-parse";
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const pdf = require("pdf-parse");
+
 import { chatComplete } from "../utils/aiGenerator.js";
 import Result from "../models/resultModel.js";
+//
+
 
 export async function processNotes(req, res) {
   try {

@@ -5,7 +5,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js",
-  "dev": "nodemon src/server.js"
+    "dev": "nodemon src/server.js"
   },
   "keywords": [],
   "author": "",
@@ -17,10 +17,17 @@
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
     "express": "^5.1.0",
+    "express-rate-limit": "^8.2.0",
+    "groq-sdk": "^0.34.0",
     "jsonwebtoken": "^9.0.2",
-    "mongoose": "^8.19.2"
+    "mongoose": "^8.19.2",
+    "multer": "^2.0.2",
+    "pdf-parse": "^2.4.5",
+    "ytdl-core": "^4.11.5",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
-  }
+  },
+  "type": "module"
 }
