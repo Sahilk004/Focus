@@ -4,7 +4,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 const __filename = fileURLToPath(import.meta.url);
-const _dirname = path.dirname(_filename);
+const __dirname = path.dirname(__filename);
 
 function ensureUploadsDir() {
   const uploadDir = path.join(__dirname, "../../uploads");
@@ -17,13 +17,13 @@ const storage = multer.diskStorage({
     cb(null, ensureUploadsDir());
   },
   filename: (req, file, cb) => {
-    cb(null, ${Date.now()}-${file.originalname});
+    cb(null, `${Date.now()}-${file.originalname}`);
   },
 });
 
 export const upload = multer({
   storage,
-  limits: { fileSize: 50 * 1024 * 1024 },
+  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
 });
 
 export function uploadsDirPath() {
