@@ -663,10 +663,44 @@ function ChatAssistant({ context }) {
   const [chatHistory, setChatHistory] = useState([]);
   const [error, setError] = useState(null);
   const [isTyping, setIsTyping] = useState(false);
-  const [dbContext, setDbContext] = useState("");
+  const [mediaContext, setMediaContext] = useState("");
+  const [transcribeContext, setTranscribeContext] = useState("");
+  const [notesContext, setNotesContext] = useState("");
+  const [activeContextType, setActiveContextType] = useState(null); // 'media', 'transcribe', 'notes', or null for all
   const [loadingContext, setLoadingContext] = useState(true);
   const chatHistoryRef = useRef(null);
   const inputRef = useRef(null);
+
+  // Detect resource type from user message
+  const detectResourceType = (message) => {
+    const lowerMessage = message.toLowerCase();
+    
+    // PDF/Notes keywords
+    const notesKeywords = ['pdf', 'notes', 'note', 'document', 'text file', 'process notes', 'processed notes'];
+    if (notesKeywords.some(keyword => lowerMessage.includes(keyword))) {
+      return 'notes';
+    }
+    
+    // Live recording/transcript keywords
+    const liveKeywords = ['live recording', 'live transcript', 'live meeting', 'recording', 'meeting recording', 'real-time'];
+    if (liveKeywords.some(keyword => lowerMessage.includes(keyword))) {
+      return 'media';
+    }
+    
+    // YouTube/Video/Upload media keywords
+    const youtubeKeywords = ['youtube', 'video', 'upload media', 'youtube video', 'video upload'];
+    if (youtubeKeywords.some(keyword => lowerMessage.includes(keyword))) {
+      return 'media';
+    }
+    
+    // Audio/Transcribe keywords
+    const transcribeKeywords = ['audio', 'transcribe', 'transcription', 'audio file', 'audio upload'];
+    if (transcribeKeywords.some(keyword => lowerMessage.includes(keyword))) {
+      return 'transcribe';
+    }
+    
+    return null; // No specific resource mentioned, use all
+  };
 
   // Fetch context from database
   const fetchContextFromDB = async () => {
@@ -679,46 +713,49 @@ function ChatAssistant({ context }) {
       // Fetch notes results (for processed) - PDF and text file processing
       const notesResponse = await axios.get("/api/results?type=notes");
       
-      const contextParts = [];
-      
       // Extract analysis from media results (live transcript, youtube videos)
+      let mediaContexts = "";
       if (mediaResponse.data.success && mediaResponse.data.results) {
-        const mediaContexts = mediaResponse.data.results
+        const contexts = mediaResponse.data.results
           .filter(result => result.content?.analysis)
           .map(result => `[Media Analysis]\n${result.content.analysis}`)
           .slice(0, 3); // Limit to most recent 3
-        if (mediaContexts.length > 0) {
-          contextParts.push(...mediaContexts);
+        if (contexts.length > 0) {
+          mediaContexts = contexts.join("\n\n---\n\n");
         }
       }
+      setMediaContext(mediaContexts);
       
       // Extract analysis from transcribe results (audio file uploads)
+      let transcribeContexts = "";
       if (transcribeResponse.data.success && transcribeResponse.data.results) {
-        const transcribeContexts = transcribeResponse.data.results
+        const contexts = transcribeResponse.data.results
           .filter(result => result.content?.analysis)
           .map(result => `[Audio Transcription Analysis]\n${result.content.analysis}`)
           .slice(0, 3); // Limit to most recent 3
-        if (transcribeContexts.length > 0) {
-          contextParts.push(...transcribeContexts);
+        if (contexts.length > 0) {
+          transcribeContexts = contexts.join("\n\n---\n\n");
         }
       }
+      setTranscribeContext(transcribeContexts);
       
       // Extract processed from notes results (PDF/text processing)
+      let notesContexts = "";
       if (notesResponse.data.success && notesResponse.data.results) {
-        const notesContexts = notesResponse.data.results
+        const contexts = notesResponse.data.results
           .filter(result => result.content?.processed)
           .map(result => `[Processed Notes]\n${result.content.processed}`)
           .slice(0, 3); // Limit to most recent 3
-        if (notesContexts.length > 0) {
-          contextParts.push(...notesContexts);
+        if (contexts.length > 0) {
+          notesContexts = contexts.join("\n\n---\n\n");
         }
       }
-      
-      const combinedContext = contextParts.join("\n\n---\n\n");
-      setDbContext(combinedContext);
+      setNotesContext(notesContexts);
     } catch (err) {
       console.error("Error fetching context from DB:", err);
-      setDbContext("");
+      setMediaContext("");
+      setTranscribeContext("");
+      setNotesContext("");
     } finally {
       setLoadingContext(false);
     }
@@ -754,8 +791,33 @@ function ChatAssistant({ context }) {
       // Simulate typing delay
       await new Promise((resolve) => setTimeout(resolve, 500));
 
-      // Combine prop context (from other tabs) and DB context
-      const combinedContext = [context, dbContext].filter(Boolean).join("\n\n---\n\n");
+      // Detect if user mentioned a specific resource type
+      const detectedType = detectResourceType(userMessage);
+      setActiveContextType(detectedType);
+
+      // Filter context based on detected resource type
+      let filteredContext = [];
+      
+      // Always include prop context (from current tab)
+      if (context) {
+        filteredContext.push(context);
+      }
+      
+      // Add context based on detected resource type
+      if (detectedType === 'notes') {
+        if (notesContext) filteredContext.push(notesContext);
+      } else if (detectedType === 'media') {
+        if (mediaContext) filteredContext.push(mediaContext);
+      } else if (detectedType === 'transcribe') {
+        if (transcribeContext) filteredContext.push(transcribeContext);
+      } else {
+        // No specific resource mentioned, use all available context
+        if (notesContext) filteredContext.push(notesContext);
+        if (mediaContext) filteredContext.push(mediaContext);
+        if (transcribeContext) filteredContext.push(transcribeContext);
+      }
+
+      const combinedContext = filteredContext.join("\n\n---\n\n");
 
       const response = await axios.post("/api/chat", {
         message: userMessage,
@@ -773,9 +835,13 @@ function ChatAssistant({ context }) {
           timestamp: Date.now(),
         },
       ]);
+      
+      // Reset active context type after response for next question
+      setActiveContextType(null);
     } catch (err) {
       setIsTyping(false);
       setError(err.response?.data?.error || "Failed to get response");
+      setActiveContextType(null);
     } finally {
       setLoading(false);
       // Focus back to input
@@ -786,6 +852,7 @@ function ChatAssistant({ context }) {
   const clearChat = () => {
     setChatHistory([]);
     setError(null);
+    setActiveContextType(null);
   };
 
   const copyToClipboard = (text) => {
@@ -805,7 +872,7 @@ function ChatAssistant({ context }) {
         </p>
       </div>
 
-      {(context || dbContext) && (
+      {(context || mediaContext || transcribeContext || notesContext) && (
         <div className="context-indicator modern-context">
           <div className="context-content">
             <span className="context-icon">
@@ -816,14 +883,19 @@ function ChatAssistant({ context }) {
               <p>
                 {loadingContext 
                   ? "Loading context from database..." 
-                  : dbContext 
-                    ? "Using stored results from previous sessions for better answers" 
-                    : "Using content from previous tab for better answers"}
+                  : activeContextType 
+                    ? `Using ${activeContextType === 'notes' ? 'PDF/Notes' : activeContextType === 'media' ? 'YouTube/Live Recording' : 'Audio Transcription'} context only`
+                    : context 
+                      ? "Using content from previous tab for better answers"
+                      : "Using stored results from all resources"}
               </p>
             </div>
             {!loadingContext && (
               <button
-                onClick={fetchContextFromDB}
+                onClick={() => {
+                  fetchContextFromDB();
+                  setActiveContextType(null);
+                }}
                 className="refresh-context-btn"
                 title="Refresh context from database"
                 style={{
@@ -870,6 +942,10 @@ function ChatAssistant({ context }) {
               <h3>Ready to help!</h3>
               <p>
                 Ask me anything about your notes, meetings, or study materials.
+                <br />
+                <small style={{ color: 'var(--gray-500)', fontSize: '0.85rem' }}>
+                  💡 Tip: Mention "PDF", "youtube", "live recording", or "audio" to get answers from specific resources only.
+                </small>
               </p>
               <div className="suggestion-chips">
                 <button
@@ -880,15 +956,15 @@ function ChatAssistant({ context }) {
                 </button>
                 <button
                   className="suggestion-chip"
-                  onClick={() => setMessage("Create practice questions")}
+                  onClick={() => setMessage("Create practice questions from my PDF notes")}
                 >
-                  Create practice questions
+                  Questions from PDF
                 </button>
                 <button
                   className="suggestion-chip"
-                  onClick={() => setMessage("Explain complex topics")}
+                  onClick={() => setMessage("Explain complex topics from the live recording")}
                 >
-                  Explain complex topics
+                  Explain from recording
                 </button>
               </div>
             </div>
