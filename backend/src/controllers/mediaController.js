@@ -7,7 +7,7 @@ import { transcribeAudioStream, generateRoleAwareSummary, generateStudyArtifacts
 import Result from "../models/resultModel.js";
 
 const __filename = fileURLToPath(import.meta.url);
-const _dirname = path.dirname(_filename);
+const __dirname = path.dirname(__filename);
 
 export async function transcribeMedia(req, res) {
   let tempFilePath = null;
@@ -72,13 +72,13 @@ export async function transcribeMedia(req, res) {
 
       if (process.env.ALLOW_YOUTUBE_FALLBACK === "true" && ytdl.validateURL(url)) {
         const uploadsDir = uploadsDirPath();
-        tempFilePath = path.join(uploadsDir, ${Date.now()}-download.webm);
+        tempFilePath = path.join(uploadsDir, `${Date.now()}-download.webm`);
         try {
           await new Promise((resolve, reject) => {
             const writeStream = fs.createWriteStream(tempFilePath);
             const reqHeaders = { "User-Agent": "Mozilla/5.0", "Accept-Language": "en-US,en;q=0.9", Referer: "https://www.youtube.com/" };
             const stream = ytdl(url, { quality: "highestaudio", filter: "audioonly", requestOptions: { headers: reqHeaders }, dlChunkSize: 0 });
-            stream.on("error", (err) => reject(new Error(YouTube download failed: ${err.message}))).pipe(writeStream).on("error", reject).on("finish", resolve);
+            stream.on("error", (err) => reject(new Error(`YouTube download failed: ${err.message}`))).pipe(writeStream).on("error", reject).on("finish", resolve);
           });
         } catch (ytErr) {
           let fallbackSuccess = false;
@@ -98,7 +98,7 @@ export async function transcribeMedia(req, res) {
           if (!fallbackSuccess && process.env.ENABLE_PIPED_FALLBACK === "true") {
             try { await tryPipedYoutubeFallback(url, tempFilePath); fallbackSuccess = true; } catch (e) { console.warn("Piped fallback failed:", e.message); }
           }
-          if (!fallbackSuccess) throw new Error(All YouTube download methods failed. Original error: ${ytErr.message});
+          if (!fallbackSuccess) throw new Error(`All YouTube download methods failed. Original error: ${ytErr.message}`);
         }
         inputStream = fs.createReadStream(tempFilePath);
       } else {
