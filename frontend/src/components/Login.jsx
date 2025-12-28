@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import Icon from "./Icon";
 
 function Login({ onLogin }) {
   const [email, setEmail] = useState("");
@@ -66,7 +67,7 @@ function Login({ onLogin }) {
           {/* Left Panel - Info */}
           <div className="login-info-panel">
             <div className="login-brand">
-              <div className="brand-icon">🎯</div>
+              <div className="brand-icon"><Icon name="message-circle" /></div>
               <div className="brand-text">ADHD Meeting Assistant</div>
             </div>
 
@@ -85,17 +86,17 @@ function Login({ onLogin }) {
                 <div className="feature-title">Focus-friendly design</div>
               </div>
               <ul className="features-list">
-                <li>📝 Scannable summaries and action items</li>
-                <li>🎙️ Transcribe video, audio, and YouTube links</li>
-                <li>💬 Ask questions with saved context</li>
-                <li>📅 Smart study scheduling</li>
+                <li>Scannable summaries and action items</li>
+                <li>Transcribe video, audio, and YouTube links</li>
+                <li>Ask questions with saved context</li>
+                <li>Smart study scheduling</li>
               </ul>
             </div>
 
             <div className="decorative-elements">
-              <div className="floating-element element-1">✨</div>
-              <div className="floating-element element-2">🧠</div>
-              <div className="floating-element element-3">🎨</div>
+              <div className="floating-element element-1"><Icon name="message-circle" /></div>
+              <div className="floating-element element-2"><Icon name="record-dot" /></div>
+              <div className="floating-element element-3"><Icon name="message-circle" /></div>
             </div>
           </div>
 
@@ -166,7 +167,7 @@ function Login({ onLogin }) {
                     className="password-toggle"
                     disabled={isLoading}
                   >
-                    {showPassword ? "👁️" : "👁️‍🗨️"}
+                    {showPassword ? <Icon name="eye" /> : <Icon name="eye-off" />}
                   </button>
                 </div>
                 {mode === "signup" && (
@@ -217,7 +218,7 @@ function Login({ onLogin }) {
 
             {error && (
               <div className="error modern-error">
-                <span className="error-icon">⚠️</span>
+                <span className="error-icon"><Icon name="warning" /></span>
                 {error}
               </div>
             )}
@@ -235,7 +236,7 @@ function Login({ onLogin }) {
             </div>
 
             <div className="legal-text">
-              By continuing, you agree to our <strong>Terms</strong> and {" "}
+              By continuing, you agree to our <strong>Terms</strong> and{" "}
               <strong>Privacy Policy</strong>.
             </div>
           </div>
@@ -343,8 +344,8 @@ function Login({ onLogin }) {
         .brand-text {
           font-weight: 800;
           font-size: 1.2rem;
-          color: #667eea;
-          background: linear-gradient(135deg, #667eea, #764ba2);
+          color: #0ea5e9;
+          background: linear-gradient(135deg, #0ea5e9, #06b6d4);
           background-clip: text;
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
@@ -575,8 +576,8 @@ function Login({ onLogin }) {
 
         .modern-input:focus {
           outline: none;
-          border-color: #667eea;
-          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+          border-color: #0ea5e9;
+          box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
           transform: translateY(-1px);
         }
 
@@ -620,13 +621,13 @@ function Login({ onLogin }) {
         .modern-checkbox {
           width: 1.2rem;
           height: 1.2rem;
-          accent-color: #667eea;
+          accent-color: #0ea5e9;
         }
 
         .forgot-password-btn {
           background: none;
           border: none;
-          color: #667eea;
+          color: #0ea5e9;
           font-weight: 600;
           cursor: pointer;
           transition: color 0.2s ease;
@@ -704,7 +705,7 @@ function Login({ onLogin }) {
         .signup-link {
           background: none;
           border: none;
-          color: #667eea;
+          color: #0ea5e9;
           font-weight: 700;
           cursor: pointer;
           margin-left: 0.25rem;

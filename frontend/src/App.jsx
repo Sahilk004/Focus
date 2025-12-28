@@ -1,12 +1,13 @@
 import { useState, useCallback, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
-
-
-
-// import ChatAssistant from "./components/ChatAssistant";
-// import StudySchedule from "./components/StudySchedule";
+import NotesProcessor from "./components/NotesProcessor";
+import MeetingAssistant from "./components/MeetingAssistant";
+import MeetingTranscriber from "./components/MeetingTranscriber";
+import ChatAssistant from "./components/ChatAssistant";
+import StudySchedule from "./components/StudySchedule";
 import Login from "./components/Login";
+import Icon from "./components/Icon";
 
 function App() {
   const [activeTab, setActiveTab] = useState("notes");
@@ -26,6 +27,15 @@ function App() {
       delete axios.defaults.headers.common["Authorization"];
     }
   }, [authed]);
+
+  // Persist active tab across reloads and restore on mount
+  useEffect(() => {
+    const savedTab = localStorage.getItem("ama_active_tab");
+    if (savedTab) setActiveTab(savedTab);
+  }, []);
+  useEffect(() => {
+    localStorage.setItem("ama_active_tab", activeTab);
+  }, [activeTab]);
 
   const handleLoggedIn = useCallback(() => {
     setAuthed(true);
@@ -49,7 +59,7 @@ function App() {
           <header className="header">
             <div className="header-content">
               <div className="header-text">
-                <h1>🎯 ADHD Meeting Assistant</h1>
+                <h1>ADHD Meeting Assistant</h1>
                 <p className="tagline">
                   Focus-friendly tools for students with ADHD/Autism
                 </p>
@@ -59,7 +69,7 @@ function App() {
                 className="logout-btn"
                 title="Logout"
               >
-                👋 Logout
+                Logout
               </button>
             </div>
           </header>
@@ -69,46 +79,55 @@ function App() {
               className={activeTab === "notes" ? "tab active" : "tab"}
               onClick={() => setActiveTab("notes")}
             >
-              📝 Process Notes
+              <span style={{marginRight:8}}><Icon name="file" size={18} /></span>
+              Process Notes
             </button>
             <button
               className={activeTab === "liveRecording" ? "tab active" : "tab"}
               onClick={() => setActiveTab("liveRecording")}
             >
-              🎙️ Live Recording
+              <span style={{marginRight:8}}><Icon name="record-dot" size={14} /></span>
+              Live Recording
             </button>
             <button
               className={activeTab === "meeting" ? "tab active" : "tab"}
               onClick={() => setActiveTab("meeting")}
             >
-              🎥 Upload Media
+              <span style={{marginRight:8}}><Icon name="video" size={16} /></span>
+              Upload Media
             </button>
             <button
               className={activeTab === "chat" ? "tab active" : "tab"}
               onClick={() => setActiveTab("chat")}
             >
-              💬 Ask Questions
+              <span style={{marginRight:8}}><Icon name="message-circle" size={16} /></span>
+              Ask Questions
             </button>
             <button
               className={activeTab === "schedule" ? "tab active" : "tab"}
               onClick={() => setActiveTab("schedule")}
             >
-              📅 Study Schedule
+              <span style={{marginRight:8}}><Icon name="calendar" size={16} /></span>
+              Study Schedule
             </button>
           </nav>
 
           <main className="content">
-            {activeTab === "notes" && (
+            <div style={{ display: activeTab === "notes" ? "block" : "none" }}>
               <NotesProcessor setContext={setContext} />
-            )}
-            {activeTab === "liveRecording" && (
+            </div>
+            <div style={{ display: activeTab === "liveRecording" ? "block" : "none" }}>
               <MeetingAssistant setContext={setContext} />
-            )}
-            {activeTab === "meeting" && (
+            </div>
+            <div style={{ display: activeTab === "meeting" ? "block" : "none" }}>
               <MeetingTranscriber setContext={setContext} />
-            )}
-            {activeTab === "chat" && <ChatAssistant context={context} />}
-            {activeTab === "schedule" && <StudySchedule />}
+            </div>
+            <div style={{ display: activeTab === "chat" ? "block" : "none" }}>
+              <ChatAssistant context={context} />
+            </div>
+            <div style={{ display: activeTab === "schedule" ? "block" : "none" }}>
+              <StudySchedule />
+            </div>
           </main>
         </>
       )}
