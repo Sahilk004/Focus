@@ -1,4 +1,4 @@
-# 🎯 ByteForge - FocusFlow
+# 🎯FocusFlow
 
 > **Real-Time Meeting Assistant for ADHD and Neurodivergent Students**
 
