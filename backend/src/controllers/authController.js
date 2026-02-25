@@ -4,7 +4,8 @@ import User from "../models/userModel.js";
 import { generateToken } from "../utils/tokenUtils.js";
 
 const schema = z.object({
-  username: z.string().min(3),
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  username: z.string().min(3, "Email/Username must be at least 3 characters"),
   password: z
     .string()
     .min(6, "Password should be at least 6 characters long")
@@ -25,16 +26,24 @@ export const signup = async (req, res) => {
       return res.status(400).json({ error: errors });
     }
 
-    const { username, password } = req.body;
+    const { name, username, password } = req.body;
     const existing = await User.findOne({ username });
     if (existing)
       return res.status(400).json({ error: "Username already exists" });
 
     const hashed = await bcrypt.hash(password, 10);
-    const newUser = await User.create({ username, password: hashed });
+    const newUser = await User.create({ name, username, password: hashed });
 
     const token = generateToken(newUser._id);
-    res.status(201).json({ message: "Signup successful", token });
+    res.status(201).json({
+      message: "Signup successful",
+      token,
+      user: {
+        id: newUser._id,
+        name: newUser.name,
+        username: newUser.username
+      }
+    });
   } catch (err) {
     res.status(500).json({ error: "Internal server error" });
   }
@@ -50,7 +59,15 @@ export const signin = async (req, res) => {
     if (!valid) return res.status(401).json({ error: "Invalid password" });
 
     const token = generateToken(user._id);
-    res.status(200).json({ message: "Signin successful", token });
+    res.status(200).json({
+      message: "Signin successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name || "User", // Fallback for old users
+        username: user.username
+      }
+    });
   } catch (err) {
     console.error("Signin Error:", err);
     res.status(500).json({ error: "Internal server error" });

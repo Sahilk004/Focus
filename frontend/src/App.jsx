@@ -1,13 +1,13 @@
 import { useState, useCallback, useEffect } from "react";
 import axios from "axios";
 import "./App.css";
+import Layout from "./components/Layout";
 import NotesProcessor from "./components/NotesProcessor";
 import MeetingAssistant from "./components/MeetingAssistant";
 import MeetingTranscriber from "./components/MeetingTranscriber";
 import ChatAssistant from "./components/ChatAssistant";
 import StudySchedule from "./components/StudySchedule";
 import Login from "./components/Login";
-import Icon from "./components/Icon";
 
 function App() {
   const [activeTab, setActiveTab] = useState("notes");
@@ -15,6 +15,10 @@ function App() {
   const [authed, setAuthed] = useState(
     () => !!localStorage.getItem("ama_auth"),
   );
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("ama_user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
 
   // Configure axios on mount and whenever auth token changes
   useEffect(() => {
@@ -39,97 +43,69 @@ function App() {
 
   const handleLoggedIn = useCallback(() => {
     setAuthed(true);
+    const savedUser = localStorage.getItem("ama_user");
+    if (savedUser) {
+      setUser(JSON.parse(savedUser));
+    }
   }, []);
 
   const handleLogout = useCallback(() => {
     localStorage.removeItem("ama_auth");
+    localStorage.removeItem("ama_user");
     sessionStorage.removeItem("ama_auth");
+    sessionStorage.removeItem("ama_user");
     delete axios.defaults.headers.common["Authorization"];
     setAuthed(false);
+    setUser(null);
     setActiveTab("notes");
     setContext("");
   }, []);
 
   return (
-    <div className="app">
+    <div className="app font-sans text-dark-900 bg-dark-50 min-h-screen">
       {!authed ? (
         <Login onLogin={handleLoggedIn} />
       ) : (
-        <>
-          <header className="header">
-            <div className="header-content">
-              <div className="header-text">
-                <h1>ADHD Meeting Assistant</h1>
-                <p className="tagline">
-                  Focus-friendly tools for students with ADHD/Autism
-                </p>
+        <Layout activeTab={activeTab} setActiveTab={setActiveTab} onLogout={handleLogout} user={user}>
+          {/* Notes Processing Tab */}
+          <div className={activeTab === "notes" ? "block h-full animate-fade-in" : "hidden"}>
+            <div className="max-w-4xl mx-auto pt-8">
+              <div className="mb-8 pl-4 border-l-4 border-primary-500">
+                <h2 className="text-3xl font-bold text-dark-900">Process Notes</h2>
+                <p className="text-dark-500 mt-1">Transform your study materials into easy-to-read guides</p>
               </div>
-              <button
-                onClick={handleLogout}
-                className="logout-btn"
-                title="Logout"
-              >
-                Logout
-              </button>
-            </div>
-          </header>
-
-          <nav className="tabs">
-            <button
-              className={activeTab === "notes" ? "tab active" : "tab"}
-              onClick={() => setActiveTab("notes")}
-            >
-              <span style={{marginRight:8}}><Icon name="file" size={18} /></span>
-              Process Notes
-            </button>
-            <button
-              className={activeTab === "liveRecording" ? "tab active" : "tab"}
-              onClick={() => setActiveTab("liveRecording")}
-            >
-              <span style={{marginRight:8}}><Icon name="record-dot" size={14} /></span>
-              Live Recording
-            </button>
-            <button
-              className={activeTab === "meeting" ? "tab active" : "tab"}
-              onClick={() => setActiveTab("meeting")}
-            >
-              <span style={{marginRight:8}}><Icon name="video" size={16} /></span>
-              Upload Media
-            </button>
-            <button
-              className={activeTab === "chat" ? "tab active" : "tab"}
-              onClick={() => setActiveTab("chat")}
-            >
-              <span style={{marginRight:8}}><Icon name="message-circle" size={16} /></span>
-              Ask Questions
-            </button>
-            <button
-              className={activeTab === "schedule" ? "tab active" : "tab"}
-              onClick={() => setActiveTab("schedule")}
-            >
-              <span style={{marginRight:8}}><Icon name="calendar" size={16} /></span>
-              Study Schedule
-            </button>
-          </nav>
-
-          <main className="content">
-            <div style={{ display: activeTab === "notes" ? "block" : "none" }}>
               <NotesProcessor setContext={setContext} />
             </div>
-            <div style={{ display: activeTab === "liveRecording" ? "block" : "none" }}>
+          </div>
+
+          {/* Live Recording Tab */}
+          <div className={activeTab === "liveRecording" ? "block h-full animate-fade-in" : "hidden"}>
+            <div className="max-w-4xl mx-auto pt-8">
               <MeetingAssistant setContext={setContext} />
             </div>
-            <div style={{ display: activeTab === "meeting" ? "block" : "none" }}>
+          </div>
+
+          {/* Upload Media Tab */}
+          <div className={activeTab === "meeting" ? "block h-full animate-fade-in" : "hidden"}>
+            <div className="max-w-4xl mx-auto pt-8">
               <MeetingTranscriber setContext={setContext} />
             </div>
-            <div style={{ display: activeTab === "chat" ? "block" : "none" }}>
+          </div>
+
+          {/* Chat Tab */}
+          <div className={activeTab === "chat" ? "block h-full animate-fade-in" : "hidden"}>
+            <div className="h-full">
               <ChatAssistant context={context} />
             </div>
-            <div style={{ display: activeTab === "schedule" ? "block" : "none" }}>
+          </div>
+
+          {/* Study Schedule Tab */}
+          <div className={activeTab === "schedule" ? "block h-full animate-fade-in" : "hidden"}>
+            <div className="max-w-4xl mx-auto pt-8">
               <StudySchedule />
             </div>
-          </main>
-        </>
+          </div>
+        </Layout>
       )}
     </div>
   );

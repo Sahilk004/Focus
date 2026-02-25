@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import axios from "axios";
 import Icon from "./Icon";
 
@@ -18,6 +18,17 @@ function MeetingAssistant({ setContext }) {
   const streamRef = useRef(null);
   const chunksRef = useRef([]);
   const intervalRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    }
+  }, []);
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -99,8 +110,8 @@ function MeetingAssistant({ setContext }) {
 
       setTranscription(
         response.data.transcript ||
-          response.data.processed ||
-          "Transcription completed",
+        response.data.processed ||
+        "Transcription completed",
       );
       setSummary(
         response.data.analysis || response.data.summary || "Analysis completed",
@@ -108,15 +119,15 @@ function MeetingAssistant({ setContext }) {
 
       const contextContent = response.data.transcript
         ? response.data.transcript +
-          (response.data.analysis ? "\n\n" + response.data.analysis : "")
+        (response.data.analysis ? "\n\n" + response.data.analysis : "")
         : response.data.processed || "Content processed successfully";
       setContext(contextContent);
     } catch (err) {
       console.error("Transcription error:", err);
       setError(
         err.response?.data?.error ||
-          err.message ||
-          "Failed to transcribe media. Please try again.",
+        err.message ||
+        "Failed to transcribe media. Please try again.",
       );
     } finally {
       setLoading(false);
@@ -164,164 +175,157 @@ function MeetingAssistant({ setContext }) {
   };
 
   return (
-    <div className="component">
-      <div className="component-header">
-        <div className="header-content">
-          <h2>Live Meeting Recording</h2>
-          <div className="feature-badge">Real-Time</div>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="glass-panel p-8">
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
+            <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+            Real-Time
+          </div>
+          <h2 className="text-2xl font-bold text-dark-900 mb-2">Live Meeting Recording</h2>
+          <p className="text-dark-500 max-w-lg mx-auto">
+            Record meetings, lectures, or conversations in real-time and get
+            instant AI-powered transcriptions with smart summaries.
+          </p>
         </div>
-        <p className="description">
-          Record meetings, lectures, or conversations in real-time and get
-          instant AI-powered transcriptions with smart summaries.
-        </p>
-      </div>
 
-      <div className="meeting-section card">
         {/* Recording Type Selector */}
-        <div className="recording-type-selector">
-          <button
-            type="button"
-            className={`recording-type-btn ${recordingType === "video" ? "active" : ""}`}
-            onClick={() => setRecordingType("video")}
-            disabled={isRecording}
-          >
-            Video + Audio
-          </button>
-          <button
-            type="button"
-            className={`recording-type-btn ${recordingType === "audio" ? "active" : ""}`}
-            onClick={() => setRecordingType("audio")}
-            disabled={isRecording}
-          >
-            Audio Only
-          </button>
+        <div className="flex justify-center gap-2 mb-8">
+          <div className="bg-dark-50 p-1 rounded-xl flex gap-1">
+            <button
+              onClick={() => setRecordingType("video")}
+              disabled={isRecording}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${recordingType === "video"
+                ? "bg-white text-primary-600 shadow-sm"
+                : "text-dark-500 hover:text-dark-900 hover:bg-dark-100"
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              Video + Audio
+            </button>
+            <button
+              onClick={() => setRecordingType("audio")}
+              disabled={isRecording}
+              className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 ${recordingType === "audio"
+                ? "bg-white text-primary-600 shadow-sm"
+                : "text-dark-500 hover:text-dark-900 hover:bg-dark-100"
+                } disabled:opacity-50 disabled:cursor-not-allowed`}
+            >
+              Audio Only
+            </button>
+          </div>
         </div>
 
         {/* Recording Controls */}
-        <div className="recording-controls">
+        <div className="flex flex-col items-center gap-6">
           {!isRecording ? (
             <button
               onClick={startRecording}
-              className="record-btn start"
               disabled={loading}
+              className="group relative flex items-center justify-center w-20 h-20 rounded-full bg-red-50 hover:bg-red-100 transition-all duration-300"
             >
-              <span className="record-icon">
-                <Icon name="record-dot" />
-              </span>
-              Start Live Recording
+              <div className="absolute inset-0 bg-red-100 rounded-full animate-ping opacity-75 group-hover:opacity-100"></div>
+              <div className="relative z-10 w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full shadow-lg shadow-red-500/30 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
+                <Icon name="mic" size={32} className="text-white" />
+              </div>
             </button>
           ) : (
-            <div className="recording-active">
-              <div className="recording-status">
-                <div className="recording-indicator pulsing">
-                  <span style={{ marginRight: 8 }}>
-                    <Icon name="record-dot" />
+            <div className="w-full max-w-md animate-fade-in">
+              <div className="flex flex-col items-center gap-4 p-6 bg-red-50 rounded-2xl border border-red-100 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
                   </span>
-                  LIVE RECORDING
-                </div>
-                <div className="recording-timer">
-                  <span className="timer-icon">
-                    <Icon name="clock" />
+                  <span className="font-mono text-2xl font-bold text-red-600 tracking-wider">
+                    {formatTime(recordingTime)}
                   </span>
-                  {formatTime(recordingTime)}
                 </div>
+                <div className="w-full h-1 bg-red-200 rounded-full overflow-hidden">
+                  <div className="h-full bg-red-500 animate-progress-indeterminate"></div>
+                </div>
+                <button
+                  onClick={stopRecording}
+                  className="flex items-center gap-2 px-6 py-2 bg-white border border-red-200 text-red-600 rounded-lg hover:bg-red-50 transition-colors shadow-sm font-semibold text-sm"
+                >
+                  <Icon name="square" size={16} fill="currentColor" />
+                  Stop Recording
+                </button>
               </div>
-              <button onClick={stopRecording} className="record-btn stop">
-                <span className="record-icon">
-                  <Icon name="stop" />
-                </span>
-                Stop Recording
-              </button>
             </div>
           )}
 
           {recordedBlob && !isRecording && (
-            <div className="recording-complete-section">
-              <div className="recording-preview">
-                <div className="preview-info">
-                  <div className="preview-icon">
-                    {recordingType === "video" ? (
-                      <Icon name="video" />
-                    ) : (
-                      <Icon name="music" />
-                    )}
-                  </div>
-                  <div className="preview-details">
-                    <h4>Recording Complete</h4>
-                    <p>
-                      {recordingType === "video" ? "Video" : "Audio"} •
-                      {formatFileSize(recordedBlob.size)} •
-                      {formatTime(recordingTime)} duration
-                    </p>
-                  </div>
+            <div className="w-full max-w-md animate-slide-up">
+              <div className="bg-white p-4 rounded-xl border border-dark-100 shadow-sm flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${recordingType === 'video' ? 'bg-purple-100 text-purple-600' : 'bg-blue-100 text-blue-600'}`}>
+                  <Icon name={recordingType === 'video' ? 'video' : 'mic'} size={24} />
                 </div>
-                <div className="preview-actions">
-                  <button
-                    onClick={handleTranscribe}
-                    className="transcribe-btn"
-                    disabled={loading}
-                  >
-                    {loading ? (
-                      <span className="loading-spinner small"></span>
-                    ) : (
-                      <span className="btn-icon">
-                        <Icon name="arrow-right" size={18} />
-                      </span>
-                    )}
-                    Transcribe & Analyze
-                  </button>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-bold text-dark-900">Recording Complete</h4>
+                  <p className="text-sm text-dark-500">
+                    {formatTime(recordingTime)} • {formatFileSize(recordedBlob.size)}
+                  </p>
+                </div>
+                <div className="flex gap-2">
                   <button
                     onClick={clearRecording}
-                    className="clear-btn"
-                    disabled={loading}
+                    className="p-2 text-dark-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title="Delete"
                   >
-                    <Icon name="x" />
+                    <Icon name="trash-2" size={18} />
+                  </button>
+                  <button
+                    onClick={handleTranscribe}
+                    disabled={loading}
+                    className="flex items-center gap-2 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {loading ? (
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    ) : (
+                      <span>Transcribe</span>
+                    )}
                   </button>
                 </div>
               </div>
             </div>
           )}
         </div>
-
-        <p className="recording-help">
-          {recordingType === "video"
-            ? "Record meetings with full video and audio for comprehensive analysis"
-            : "Record audio-only meetings for faster processing and smaller file sizes"}
-        </p>
       </div>
 
       {error && (
-        <div className="error modern-error">
-          <div className="error-content">
-            <span className="error-icon">
-              <Icon name="warning" />
-            </span>
-            <div>
-              <h4>Something went wrong</h4>
-              <p>{error}</p>
-            </div>
+        <div className="p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3 animate-slide-up">
+          <div className="p-1.5 bg-red-100 text-red-600 rounded-lg">
+            <Icon name="alert-triangle" size={18} />
+          </div>
+          <div>
+            <h4 className="font-bold text-red-900 text-sm">Error</h4>
+            <p className="text-red-700 text-sm mt-0.5">{error}</p>
           </div>
         </div>
       )}
 
       {/* Transcription Results */}
       {transcription && (
-        <div className="result modern-result card">
-          <div className="result-header">
-            <h3>Meeting Analysis Complete!</h3>
-            <div className="result-actions">
+        <div className="glass-panel p-0 overflow-hidden animate-slide-up">
+          <div className="p-4 border-b border-white/20 bg-white/40 flex items-center justify-between">
+            <h3 className="font-bold text-lg text-primary-800 flex items-center gap-2">
+              <Icon name="check-circle" size={20} className="text-success-500" />
+              Meeting Analysis
+            </h3>
+            <div className="flex gap-2">
               <button
-                className="action-btn copy-btn"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-dark-200 rounded-lg text-sm font-medium text-dark-600 hover:text-primary-600 hover:border-primary-200 transition-colors shadow-sm"
                 onClick={() =>
                   navigator.clipboard?.writeText(
                     transcription + "\n\n" + summary,
                   )
                 }
               >
-                <Icon name="copy" size={16} /> Copy All
+                <Icon name="copy" size={14} /> Copy
               </button>
               <button
-                className="action-btn download-btn"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-dark-200 rounded-lg text-sm font-medium text-dark-600 hover:text-primary-600 hover:border-primary-200 transition-colors shadow-sm"
                 onClick={() => {
                   const content = transcription
                     ? `Meeting Transcript:\n${transcription}\n\n${summary ? `AI Summary:\n${summary}` : ""}`
@@ -335,576 +339,92 @@ function MeetingAssistant({ setContext }) {
                   URL.revokeObjectURL(url);
                 }}
               >
-                <Icon name="download" size={16} /> Download
+                <Icon name="download" size={14} /> Download
               </button>
             </div>
           </div>
 
-          <div className="sections">
-            {transcription && (
-              <div className="section">
-                <h3>Transcription</h3>
-                <div className="result-content transcript">{transcription}</div>
+          <div className="p-6 space-y-8 bg-white/50">
+            {/* Transcript */}
+            <div className="space-y-3">
+              <h3 className="font-bold text-dark-800 flex items-center gap-2">
+                <Icon name="file-text" size={18} className="text-primary-500" />
+                Transcript
+              </h3>
+              <div className="p-4 bg-white rounded-xl border border-dark-100 text-dark-600 text-sm leading-relaxed max-h-60 overflow-y-auto">
+                {transcription}
               </div>
-            )}
+            </div>
 
+            {/* AI Summary */}
             {summary && (
-              <div className="section">
-                <h3>AI Summary</h3>
+              <div className="space-y-3">
+                <h3 className="font-bold text-dark-800 flex items-center gap-2">
+                  <Icon name="sparkles" size={18} className="text-primary-500" />
+                  AI Summary
+                </h3>
                 <div
-                  className="result-content"
+                  className="prose prose-sm max-w-none prose-p:text-dark-600 prose-headings:font-serif prose-headings:text-primary-900"
                   dangerouslySetInnerHTML={{
                     __html: summary
-                      .replace(/\\(.?)\\*/g, "<strong>$1</strong>")
-                      .replace(/\n/g, "<br/>"),
+                      .replace(/\\(.?)\\*/g, "<strong class='text-primary-700'>$1</strong>")
+                      .replace(/\n/g, "<br/>")
+                      .replace(/#{3}\s(.*?)$/gm, "<h4 class='text-lg font-bold font-serif text-primary-900 mt-4 mb-2'>$1</h4>")
+                      .replace(/#{2}\s(.*?)$/gm, "<h3 class='text-xl font-bold font-serif text-primary-900 mt-6 mb-3'>$1</h3>")
+                      .replace(/#{1}\s(.*?)$/gm, "<h2 class='text-2xl font-bold font-serif text-primary-900 mt-8 mb-4 border-b border-primary-200 pb-2'>$1</h2>"),
                   }}
                 />
               </div>
             )}
 
             {/* Follow-up Q&A */}
-            <div className="section">
-              <h3>Ask Follow-up Questions</h3>
-              <form onSubmit={handleFollowup} className="followup-form">
-                <div className="followup-input-wrapper">
+            <div className="pt-6 border-t border-dark-100">
+              <h3 className="font-bold text-dark-800 mb-4 flex items-center gap-2">
+                <Icon name="message-circle" size={18} className="text-primary-500" />
+                Ask Follow-up Questions
+              </h3>
+
+              <div className="space-y-4">
+                {followupAnswer && (
+                  <div className="p-4 bg-primary-50 rounded-xl border border-primary-100 animate-fade-in">
+                    <h4 className="font-semibold text-primary-800 text-sm mb-1">Answer:</h4>
+                    <div
+                      className="text-dark-700 text-sm leading-relaxed"
+                      dangerouslySetInnerHTML={{
+                        __html: followupAnswer
+                          .replace(/\\(.?)\\*/g, "<strong>$1</strong>")
+                          .replace(/\n/g, "<br/>"),
+                      }}
+                    />
+                  </div>
+                )}
+
+                <form onSubmit={handleFollowup} className="relative">
                   <input
                     type="text"
                     value={followupQuestion}
                     onChange={(e) => setFollowupQuestion(e.target.value)}
                     placeholder="Ask a question about this meeting..."
                     disabled={loading}
-                    className="followup-input"
+                    className="w-full pl-4 pr-12 py-3 bg-white border border-dark-200 rounded-xl focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-all shadow-sm"
                   />
                   <button
                     type="submit"
                     disabled={loading || !followupQuestion.trim()}
-                    className="followup-send-btn"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
                     {loading ? (
-                      <span className="loading-spinner small"></span>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                     ) : (
-                      <Icon name="send" />
+                      <Icon name="send" size={16} />
                     )}
                   </button>
-                </div>
-              </form>
-
-              {followupAnswer && (
-                <div className="followup-answer">
-                  <h4>Answer:</h4>
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: followupAnswer
-                        .replace(/\\(.?)\\*/g, "<strong>$1</strong>")
-                        .replace(/\n/g, "<br/>"),
-                    }}
-                  />
-                </div>
-              )}
+                </form>
+              </div>
             </div>
           </div>
         </div>
       )}
-
-      <style jsx>{`
-        .component-header {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
-
-        .header-content {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 1rem;
-          margin-bottom: 1rem;
-        }
-
-        .feature-badge {
-          background: linear-gradient(135deg, #0ea5e9, #06b6d4);
-          color: white;
-          padding: 0.25rem 0.75rem;
-          border-radius: 2rem;
-          font-size: 0.75rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .meeting-section {
-          margin-bottom: 2rem;
-        }
-
-        .recording-type-selector {
-          display: flex;
-          gap: 0.5rem;
-          justify-content: center;
-          margin-bottom: 2rem;
-          padding: 0.25rem;
-          background: var(--gray-50);
-          border-radius: 0.75rem;
-          width: fit-content;
-          margin-left: auto;
-          margin-right: auto;
-        }
-
-        .recording-type-btn {
-          padding: 0.5rem 1rem;
-          border-radius: 0.5rem;
-          border: none;
-          background: transparent;
-          color: var(--gray-500);
-          font-weight: 500;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          font-size: 0.9rem;
-        }
-
-        .recording-type-btn.active {
-          background: white;
-          color: var(--primary-color);
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        }
-
-        .recording-type-btn:hover:not(.active):not(:disabled) {
-          color: var(--primary-color);
-          background: rgba(102, 126, 234, 0.05);
-        }
-
-        .recording-type-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-        }
-
-        .recording-controls {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 1.5rem;
-          margin-bottom: 2rem;
-        }
-
-        .record-btn {
-          display: flex;
-          align-items: center;
-          gap: 0.75rem;
-          padding: 1.25rem 2.5rem;
-          border: none;
-          border-radius: 2rem;
-          font-size: 1.2rem;
-          font-weight: 700;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-        }
-
-        .record-btn.start {
-          background: linear-gradient(135deg, #ef4444, #dc2626);
-          color: white;
-        }
-
-        .record-btn.start:hover:not(:disabled) {
-          background: linear-gradient(135deg, #dc2626, #b91c1c);
-          transform: translateY(-3px);
-          box-shadow: 0 8px 25px rgba(239, 68, 68, 0.4);
-        }
-
-        .record-btn.stop {
-          background: linear-gradient(135deg, #6b7280, #4b5563);
-          color: white;
-        }
-
-        .record-btn.stop:hover {
-          background: linear-gradient(135deg, #4b5563, #374151);
-          transform: translateY(-2px);
-        }
-
-        .record-icon {
-          font-size: 1.3rem;
-        }
-
-        .recording-active {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 1.5rem;
-          width: 100%;
-        }
-
-        .recording-status {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .recording-indicator {
-          background: linear-gradient(135deg, #ef4444, #dc2626);
-          color: white;
-          padding: 1rem 2rem;
-          border-radius: 2rem;
-          font-weight: 700;
-          font-size: 1.1rem;
-          letter-spacing: 0.05em;
-          box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
-        }
-
-        .recording-indicator.pulsing {
-          animation: pulse 1.5s infinite;
-        }
-
-        .recording-timer {
-          display: flex;
-          align-items: center;
-          gap: 0.5rem;
-          background: var(--warning-color);
-          color: white;
-          padding: 0.75rem 1.5rem;
-          border-radius: 1.5rem;
-          font-weight: 600;
-          font-size: 1.2rem;
-          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-        }
-
-        .timer-icon {
-          font-size: 1.1rem;
-        }
-
-        .recording-complete-section {
-          width: 100%;
-          max-width: 600px;
-        }
-
-        .recording-preview {
-          background: white;
-          padding: 1.5rem;
-          border-radius: 1.5rem;
-          border: 2px solid var(--success-color);
-          box-shadow: 0 8px 25px rgba(16, 185, 129, 0.15);
-        }
-
-        .preview-info {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-          margin-bottom: 1rem;
-        }
-
-        .preview-icon {
-          font-size: 2.5rem;
-        }
-
-        .preview-details h4 {
-          margin: 0;
-          color: var(--gray-800);
-          font-weight: 700;
-          font-size: 1.1rem;
-        }
-
-        .preview-details p {
-          margin: 0.25rem 0 0 0;
-          color: var(--gray-600);
-          font-size: 0.9rem;
-        }
-
-        .preview-actions {
-          display: flex;
-          gap: 1rem;
-          align-items: center;
-        }
-
-        .transcribe-btn {
-          flex: 1;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 0.5rem;
-          background: var(--primary-gradient);
-          color: white;
-          border: none;
-          padding: 0.75rem 1.5rem;
-          border-radius: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-        }
-
-        .transcribe-btn:hover:not(:disabled) {
-          transform: translateY(-2px);
-          box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-        }
-
-        .transcribe-btn:disabled {
-          opacity: 0.7;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .clear-btn {
-          background: var(--danger-color);
-          color: white;
-          border: none;
-          width: 2.5rem;
-          height: 2.5rem;
-          border-radius: 50%;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          font-size: 1rem;
-        }
-
-        .clear-btn:hover:not(:disabled) {
-          background: #dc2626;
-          transform: scale(1.1);
-        }
-
-        .recording-help {
-          text-align: center;
-          color: var(--gray-500);
-          font-size: 0.9rem;
-          margin: 0;
-          font-style: italic;
-        }
-
-        .loading-spinner.small {
-          width: 16px;
-          height: 16px;
-          border: 2px solid transparent;
-          border-top: 2px solid currentColor;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
-        }
-
-        .btn-icon {
-          font-size: 1rem;
-        }
-
-        .modern-error {
-          border-left: 4px solid var(--danger-color);
-        }
-
-        .error-content {
-          display: flex;
-          align-items: flex-start;
-          gap: 1rem;
-        }
-
-        .error-content h4 {
-          margin: 0 0 0.25rem 0;
-          color: var(--danger-color);
-          font-weight: 700;
-        }
-
-        .error-content p {
-          margin: 0;
-          color: #991b1b;
-        }
-
-        .modern-result {
-          border-left: 4px solid var(--success-color);
-        }
-
-        .result-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 1.5rem;
-          padding-bottom: 1rem;
-          border-bottom: 1px solid var(--gray-200);
-        }
-
-        .result-actions {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .action-btn {
-          background: var(--gray-100);
-          border: 1px solid var(--gray-300);
-          color: var(--gray-700);
-          padding: 0.5rem 1rem;
-          border-radius: 0.75rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          font-size: 0.9rem;
-        }
-
-        .action-btn:hover {
-          background: var(--gray-200);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .sections {
-          display: flex;
-          flex-direction: column;
-          gap: 1.5rem;
-        }
-
-        .section h3 {
-          color: var(--gray-800);
-          font-weight: 700;
-          margin-bottom: 0.75rem;
-          font-size: 1.2rem;
-        }
-
-        .result-content {
-          line-height: 1.7;
-          color: var(--gray-700);
-        }
-
-        .transcript {
-          background: var(--gray-50);
-          padding: 1.5rem;
-          border-radius: 1rem;
-          border-left: 4px solid var(--primary-color);
-          font-family:
-            "SF Mono", Monaco, "Cascadia Code", "Roboto Mono", Consolas,
-            "Courier New", monospace;
-          font-size: 0.95rem;
-        }
-
-        .followup-form {
-          margin-bottom: 1rem;
-        }
-
-        .followup-input-wrapper {
-          display: flex;
-          gap: 0.75rem;
-          align-items: center;
-        }
-
-        .followup-input {
-          flex: 1;
-          padding: 0.75rem 1rem;
-          border: 2px solid var(--gray-200);
-          border-radius: 1rem;
-          font-size: 1rem;
-          transition: all 0.2s ease;
-        }
-
-        .followup-input:focus {
-          outline: none;
-          border-color: var(--primary-color);
-          box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
-        }
-
-        .followup-send-btn {
-          width: 40px;
-          height: 40px;
-          border-radius: 50%;
-          background: var(--primary-gradient);
-          color: white;
-          border: none;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 1.1rem;
-        }
-
-        .followup-send-btn:hover:not(:disabled) {
-          transform: scale(1.05);
-          box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-        }
-
-        .followup-send-btn:disabled {
-          opacity: 0.5;
-          cursor: not-allowed;
-          transform: none;
-        }
-
-        .followup-answer {
-          background: white;
-          padding: 1.5rem;
-          border-radius: 1rem;
-          border-left: 4px solid var(--success-color);
-          box-shadow: var(--shadow-sm);
-          animation: slideInLeft 0.5s ease-out;
-        }
-
-        .followup-answer h4 {
-          color: var(--success-color);
-          margin-bottom: 0.75rem;
-          font-weight: 700;
-          font-size: 1.1rem;
-        }
-
-        @keyframes pulse {
-          0%,
-          100% {
-            transform: scale(1);
-          }
-          50% {
-            transform: scale(1.02);
-          }
-        }
-
-        @keyframes spin {
-          to {
-            transform: rotate(360deg);
-          }
-        }
-
-        @keyframes slideInLeft {
-          from {
-            opacity: 0;
-            transform: translateX(-20px);
-          }
-          to {
-            opacity: 1;
-            transform: translateX(0);
-          }
-        }
-
-        @media (max-width: 768px) {
-          .recording-type-selector {
-            flex-direction: column;
-            width: 100%;
-          }
-
-          .recording-type-btn {
-            width: 100%;
-            text-align: center;
-          }
-
-          .record-btn {
-            padding: 1rem 2rem;
-            font-size: 1rem;
-          }
-
-          .result-header {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: flex-start;
-          }
-
-          .result-actions {
-            width: 100%;
-            justify-content: stretch;
-          }
-
-          .action-btn {
-            flex: 1;
-            text-align: center;
-          }
-
-          .followup-input-wrapper {
-            flex-direction: column;
-          }
-
-          .followup-input {
-            width: 100%;
-          }
-
-          .followup-send-btn {
-            width: 100%;
-            border-radius: 1rem;
-            height: 44px;
-          }
-        }
-      `}</style>
     </div>
   );
 }

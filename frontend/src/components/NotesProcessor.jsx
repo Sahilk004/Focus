@@ -43,7 +43,7 @@ function NotesProcessor({ setContext }) {
         droppedFile.type === "application/pdf" ||
         droppedFile.type === "application/vnd.ms-powerpoint" ||
         droppedFile.type ===
-          "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
       ) {
         setFile(droppedFile);
         setError(null);
@@ -114,22 +114,28 @@ function NotesProcessor({ setContext }) {
   };
 
   return (
-    <div className="component">
-      <div className="component-header">
-        <div className="header-content">
-          <h2>Process Your Notes</h2>
-          <div className="feature-badge">AI-Powered</div>
+    <div className="space-y-6">
+      {/* Upload Section */}
+      <div className="glass-panel p-8">
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center gap-2 px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs font-bold uppercase tracking-wider mb-2">
+            <Icon name="bot" size={14} />
+            AI-Powered
+          </div>
+          <p className="text-dark-500 max-w-lg mx-auto">
+            Upload your notes, PDFs, or PowerPoint presentations to get
+            ADHD-friendly study guides with key points and summaries.
+          </p>
         </div>
-        <p className="description">
-          Upload your notes, PDFs, or PowerPoint presentations to get
-          ADHD-friendly study guides with key points and summaries.
-        </p>
-      </div>
 
-      <div className="upload-section card">
-        <form onSubmit={handleSubmit} className="upload-form">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div
-            className={`file-drop-zone ${dragOver ? "drag-over" : ""} ${file ? "has-file" : ""}`}
+            className={`border-3 border-dashed rounded-2xl p-8 text-center cursor-pointer transition-all duration-300 relative overflow-hidden group ${dragOver
+              ? "border-primary-500 bg-primary-50 scale-[1.01]"
+              : file
+                ? "border-success-500 bg-success-50/30"
+                : "border-dark-200 bg-dark-50/50 hover:border-primary-400 hover:bg-white"
+              }`}
             onDragOver={handleDragOver}
             onDragLeave={handleDragLeave}
             onDrop={handleDrop}
@@ -140,49 +146,45 @@ function NotesProcessor({ setContext }) {
               type="file"
               onChange={handleFileChange}
               accept=".txt,.pdf,.pptx"
-              className="file-input-hidden"
+              className="hidden"
             />
 
             {!file ? (
-              <div className="drop-zone-content">
-                <div className="upload-icon">
-                  <Icon name="upload" size={48} />
+              <div className="space-y-4">
+                <div className="w-16 h-16 mx-auto bg-white rounded-2xl shadow-sm flex items-center justify-center text-primary-500 group-hover:scale-110 transition-transform duration-300">
+                  <Icon name="upload" size={32} stroke={1.5} />
                 </div>
-                <h3>Drop your file here or click to browse</h3>
-                <p>
-                  Supports text documents, PDFs, and PowerPoint presentations
-                </p>
-                <div className="supported-formats">
-                  <span className="format-badge">TXT</span>
-                  <span className="format-badge">PDF</span>
-                  <span className="format-badge">PPTX</span>
+                <div>
+                  <h3 className="text-lg font-bold text-dark-800">Drop your file here or click to browse</h3>
+                  <p className="text-dark-400 text-sm mt-1">
+                    Supports text documents, PDFs, and PowerPoint presentations
+                  </p>
+                </div>
+                <div className="flex gap-2 justify-center">
+                  {["TXT", "PDF", "PPTX"].map((fmt) => (
+                    <span key={fmt} className="px-2 py-1 bg-dark-100 text-dark-500 rounded text-xs font-bold">
+                      {fmt}
+                    </span>
+                  ))}
                 </div>
               </div>
             ) : (
-              <div className="file-preview">
-                <div className="file-info">
-                  <div className="file-icon">
-                    {file.type === "application/pdf" ? (
-                      <Icon name="file-pdf" />
-                    ) : file.type === "application/vnd.ms-powerpoint" ||
-                      file.type ===
-                        "application/vnd.openxmlformats-officedocument.presentationml.presentation" ? (
-                      <Icon name="file-ppt" />
-                    ) : (
-                      <Icon name="file" />
-                    )}
-                  </div>
-                  <div className="file-details">
-                    <h4>{file.name}</h4>
-                    <p>
-                      {formatFileSize(file.size)} •{" "}
-                      {file.type.includes("pdf")
-                        ? "PDF Document"
-                        : file.type.includes("presentation")
-                        ? "PowerPoint Presentation"
-                        : "Text File"}
-                    </p>
-                  </div>
+              <div className="relative flex items-center gap-4 bg-white p-4 rounded-xl shadow-sm animate-fade-in">
+                <div className="p-3 bg-primary-100 text-primary-600 rounded-lg">
+                  {file.type === "application/pdf" ? (
+                    <Icon name="file-pdf" size={24} />
+                  ) : file.type.includes("presentation") ? (
+                    <Icon name="file-ppt" size={24} />
+                  ) : (
+                    <Icon name="file" size={24} />
+                  )}
+                </div>
+                <div className="text-left flex-1 min-w-0">
+                  <h4 className="font-semibold text-dark-900 truncate">{file.name}</h4>
+                  <p className="text-xs text-dark-500">
+                    {formatFileSize(file.size)} •{" "}
+                    {file.type.includes("pdf") ? "PDF Document" : file.type.includes("presentation") ? "PowerPoint" : "Text File"}
+                  </p>
                 </div>
                 <button
                   type="button"
@@ -190,24 +192,25 @@ function NotesProcessor({ setContext }) {
                     e.stopPropagation();
                     clearFile();
                   }}
-                  className="remove-file-btn"
-                  disabled={loading}
+                  className="p-2 hover:bg-red-50 text-dark-400 hover:text-red-500 rounded-full transition-colors"
                 >
-                  <Icon name="x" />
+                  <Icon name="x" size={20} />
                 </button>
               </div>
             )}
           </div>
 
           {loading && (
-            <div className="progress-section">
-              <div className="progress-bar">
+            <div className="space-y-2">
+              <div className="h-2 w-full bg-dark-100 rounded-full overflow-hidden">
                 <div
-                  className="progress-fill"
+                  className="h-full bg-gradient-to-r from-primary-400 to-primary-600 rounded-full transition-all duration-300 relative"
                   style={{ width: `${progress}%` }}
-                ></div>
+                >
+                  <div className="absolute inset-0 bg-white/30 animate-pulse"></div>
+                </div>
               </div>
-              <p className="progress-text">
+              <p className="text-center text-sm font-medium text-dark-500 animate-pulse">
                 Processing your content... {Math.round(progress)}%
               </p>
             </div>
@@ -216,19 +219,18 @@ function NotesProcessor({ setContext }) {
           <button
             type="submit"
             disabled={loading || !file}
-            className={`btn-primary submit-btn ${loading ? "loading" : ""}`}
+            className="w-full btn-primary flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed group"
           >
             {loading ? (
               <>
-                <span className="loading-spinner"></span>
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                 Processing...
               </>
             ) : (
               <>
-                <span className="btn-icon">
-                  <Icon name="arrow-right" size={18} />
-                </span>
-                Process Content
+                <Icon name="bot" size={20} className="group-hover:rotate-12 transition-transform" />
+                Generate Study Guide
+                <Icon name="arrow-right" size={18} className="opacity-70 group-hover:translate-x-1 transition-transform" />
               </>
             )}
           </button>
@@ -236,32 +238,33 @@ function NotesProcessor({ setContext }) {
       </div>
 
       {error && (
-        <div className="error modern-error">
-          <div className="error-content">
-            <span className="error-icon">
-              <Icon name="warning" />
-            </span>
-            <div>
-              <h4>Processing Failed</h4>
-              <p>{error}</p>
-            </div>
+        <div className="p-4 rounded-xl bg-red-50 border border-red-100 flex items-start gap-3 animate-slide-up">
+          <div className="p-1.5 bg-red-100 text-red-600 rounded-lg">
+            <Icon name="warning" size={18} />
+          </div>
+          <div>
+            <h4 className="font-bold text-red-900 text-sm">Processing Failed</h4>
+            <p className="text-red-700 text-sm mt-0.5">{error}</p>
           </div>
         </div>
       )}
 
       {result && (
-        <div className="result modern-result card">
-          <div className="result-header">
-            <h3>Your Study Guide is Ready!</h3>
-            <div className="result-actions">
+        <div className="glass-panel p-0 overflow-hidden animate-slide-up">
+          <div className="p-4 border-b border-white/20 bg-white/40 flex items-center justify-between">
+            <h3 className="font-bold text-lg text-primary-800 flex items-center gap-2">
+              <Icon name="check-circle" size={20} className="text-success-500" />
+              Your Study Guide
+            </h3>
+            <div className="flex gap-2">
               <button
-                className="action-btn copy-btn"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-dark-200 rounded-lg text-sm font-medium text-dark-600 hover:text-primary-600 hover:border-primary-200 transition-colors shadow-sm"
                 onClick={() => navigator.clipboard?.writeText(result)}
               >
-                <Icon name="copy" size={16} /> Copy
+                <Icon name="copy" size={14} /> Copy
               </button>
               <button
-                className="action-btn download-btn"
+                className="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-dark-200 rounded-lg text-sm font-medium text-dark-600 hover:text-primary-600 hover:border-primary-200 transition-colors shadow-sm"
                 onClick={() => {
                   const blob = new Blob([result], { type: "text/plain" });
                   const url = URL.createObjectURL(blob);
@@ -272,368 +275,23 @@ function NotesProcessor({ setContext }) {
                   URL.revokeObjectURL(url);
                 }}
               >
-                <Icon name="download" size={16} /> Download
+                <Icon name="download" size={14} /> Download
               </button>
             </div>
           </div>
           <div
-            className="result-content"
+            className="p-8 prose prose-slate max-w-none prose-headings:text-primary-800 prose-a:text-primary-600 prose-strong:text-dark-900 text-dark-700 leading-relaxed bg-white/50"
             dangerouslySetInnerHTML={{
               __html: result
-                .replace(/\\(.?)\\*/g, "<strong>$1</strong>")
+                .replace(/\\(.?)\\*/g, "<strong class='text-primary-700'>$1</strong>")
                 .replace(/\n/g, "<br/>")
-                .replace(/#{3}\s(.*?)$/gm, "<h4>$1</h4>")
-                .replace(/#{2}\s(.*?)$/gm, "<h3>$1</h3>")
-                .replace(/#{1}\s(.*?)$/gm, "<h2>$1</h2>"),
+                .replace(/#{3}\s(.*?)$/gm, "<h4 class='text-lg font-bold font-serif text-primary-900 mt-4 mb-2'>$1</h4>")
+                .replace(/#{2}\s(.*?)$/gm, "<h3 class='text-xl font-bold font-serif text-primary-900 mt-6 mb-3'>$1</h3>")
+                .replace(/#{1}\s(.*?)$/gm, "<h2 class='text-2xl font-bold font-serif text-primary-900 mt-8 mb-4 border-b border-primary-200 pb-2'>$1</h2>"),
             }}
           />
         </div>
       )}
-
-      <style jsx>{`
-        .component-header {
-          text-align: center;
-          margin-bottom: 2rem;
-        }
-
-        .header-content {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          gap: 1rem;
-          margin-bottom: 1rem;
-        }
-
-        .feature-badge {
-          background: linear-gradient(135deg, #0ea5e9, #06b6d4);
-          color: white;
-          padding: 0.25rem 0.75rem;
-          border-radius: 2rem;
-          font-size: 0.75rem;
-          font-weight: 700;
-          text-transform: uppercase;
-          letter-spacing: 0.05em;
-        }
-
-        .upload-section {
-          margin-bottom: 2rem;
-        }
-
-        .file-drop-zone {
-          border: 3px dashed var(--gray-300);
-          border-radius: 1.5rem;
-          padding: 2rem;
-          text-align: center;
-          cursor: pointer;
-          transition: all 0.3s ease;
-          background: var(--gray-50);
-          position: relative;
-          overflow: hidden;
-        }
-
-        .file-drop-zone::before {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: -100%;
-          width: 100%;
-          height: 100%;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(102, 126, 234, 0.1),
-            transparent
-          );
-          transition: left 0.5s;
-        }
-
-        .file-drop-zone:hover::before {
-          left: 100%;
-        }
-
-        .file-drop-zone:hover {
-          border-color: var(--primary-color);
-          background: rgba(102, 126, 234, 0.05);
-          transform: translateY(-2px);
-          box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
-        }
-
-        .file-drop-zone.drag-over {
-          border-color: var(--primary-color);
-          background: rgba(102, 126, 234, 0.1);
-          transform: scale(1.02);
-        }
-
-        .file-drop-zone.has-file {
-          border-color: var(--success-color);
-          background: rgba(16, 185, 129, 0.05);
-        }
-
-        .file-input-hidden {
-          display: none;
-        }
-
-        .drop-zone-content h3 {
-          margin: 1rem 0 0.5rem 0;
-          color: var(--gray-700);
-          font-weight: 700;
-        }
-
-        .drop-zone-content p {
-          color: var(--gray-500);
-          margin-bottom: 1rem;
-        }
-
-        .upload-icon {
-          font-size: 3rem;
-          margin-bottom: 1rem;
-          animation: bounce 2s infinite;
-        }
-
-        @keyframes bounce {
-          0%,
-          100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-10px);
-          }
-        }
-
-        .supported-formats {
-          display: flex;
-          gap: 0.5rem;
-          justify-content: center;
-        }
-
-        .format-badge {
-          background: var(--gray-200);
-          color: var(--gray-600);
-          padding: 0.25rem 0.5rem;
-          border-radius: 0.5rem;
-          font-size: 0.75rem;
-          font-weight: 600;
-        }
-
-        .file-preview {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          background: white;
-          padding: 1rem;
-          border-radius: 1rem;
-          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        }
-
-        .file-info {
-          display: flex;
-          align-items: center;
-          gap: 1rem;
-        }
-
-        .file-icon {
-          font-size: 2rem;
-        }
-
-        .file-details h4 {
-          margin: 0;
-          color: var(--gray-800);
-          font-weight: 600;
-        }
-
-        .file-details p {
-          margin: 0.25rem 0 0 0;
-          color: var(--gray-500);
-          font-size: 0.9rem;
-        }
-
-        .remove-file-btn {
-          background: var(--danger-color);
-          color: white;
-          border: none;
-          width: 2rem;
-          height: 2rem;
-          border-radius: 50%;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          font-weight: bold;
-        }
-
-        .remove-file-btn:hover {
-          background: #dc2626;
-          transform: scale(1.1);
-        }
-
-        .progress-section {
-          margin: 1.5rem 0;
-        }
-
-        .progress-bar {
-          width: 100%;
-          height: 8px;
-          background: var(--gray-200);
-          border-radius: 4px;
-          overflow: hidden;
-          margin-bottom: 0.5rem;
-        }
-
-        .progress-fill {
-          height: 100%;
-          background: linear-gradient(
-            90deg,
-            var(--primary-color),
-            var(--primary-dark)
-          );
-          transition: width 0.3s ease;
-          position: relative;
-        }
-
-        .progress-fill::after {
-          content: "";
-          position: absolute;
-          top: 0;
-          left: 0;
-          bottom: 0;
-          right: 0;
-          background: linear-gradient(
-            90deg,
-            transparent,
-            rgba(255, 255, 255, 0.3),
-            transparent
-          );
-          animation: shimmer 1.5s infinite;
-        }
-
-        @keyframes shimmer {
-          0% {
-            transform: translateX(-100%);
-          }
-          100% {
-            transform: translateX(100%);
-          }
-        }
-
-        .progress-text {
-          text-align: center;
-          color: var(--gray-600);
-          font-weight: 600;
-          margin: 0;
-        }
-
-        .submit-btn {
-          width: 100%;
-          margin-top: 1rem;
-          position: relative;
-        }
-
-        .btn-icon {
-          margin-right: 0.5rem;
-        }
-
-        .modern-error {
-          border-left: 4px solid var(--danger-color);
-        }
-
-        .error-content {
-          display: flex;
-          align-items: flex-start;
-          gap: 1rem;
-        }
-
-        .error-content h4 {
-          margin: 0 0 0.25rem 0;
-          color: var(--danger-color);
-          font-weight: 700;
-        }
-
-        .error-content p {
-          margin: 0;
-          color: #991b1b;
-        }
-
-        .modern-result {
-          border-left: 4px solid var(--success-color);
-        }
-
-        .result-header {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          margin-bottom: 1.5rem;
-          padding-bottom: 1rem;
-          border-bottom: 1px solid var(--gray-200);
-        }
-
-        .result-actions {
-          display: flex;
-          gap: 0.5rem;
-        }
-
-        .action-btn {
-          background: var(--gray-100);
-          border: 1px solid var(--gray-300);
-          color: var(--gray-700);
-          padding: 0.5rem 1rem;
-          border-radius: 0.75rem;
-          font-weight: 600;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          font-size: 0.9rem;
-        }
-
-        .action-btn:hover {
-          background: var(--gray-200);
-          transform: translateY(-1px);
-          box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }
-
-        .result-content {
-          line-height: 1.8;
-        }
-
-        .result-content h2 {
-          color: var(--primary-color);
-          font-weight: 800;
-          margin: 1.5rem 0 1rem 0;
-          font-size: 1.4rem;
-        }
-
-        .result-content h3 {
-          color: var(--gray-700);
-          font-weight: 700;
-          margin: 1.25rem 0 0.75rem 0;
-          font-size: 1.2rem;
-        }
-
-        .result-content h4 {
-          color: var(--gray-600);
-          font-weight: 600;
-          margin: 1rem 0 0.5rem 0;
-          font-size: 1.1rem;
-        }
-
-        @keyframes spin {
-          to { transform: rotate(360deg); }
-        }
-
-        @media (max-width: 768px) {
-          .result-header {
-            flex-direction: column;
-            gap: 1rem;
-            align-items: flex-start;
-          }
-
-          .result-actions {
-            width: 100%;
-            justify-content: stretch;
-          }
-
-          .action-btn {
-            flex: 1;
-            text-align: center;
-          }
-        }
-      `}</style>
     </div>
   );
 }
